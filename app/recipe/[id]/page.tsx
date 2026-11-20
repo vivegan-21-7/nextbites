@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getRecipe, recipes } from "../../data/recipes";
 
 export function generateStaticParams() {
@@ -12,10 +13,26 @@ type Props = {
   params: { id: string } | Promise<{ id: string }>;
 };
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await Promise.resolve(params);
+  const recipe = getRecipe(id);
+  if (!recipe) {
+    return {
+      title: "Recipe Not Found · NextBites",
+    };
+  }
+  return {
+    title: `${recipe.title} · NextBites`,
+    description:
+      recipe.blurb || `Learn how to cook ${recipe.title} on NextBites.`,
+  };
+}
+
 export default async function RecipePage({ params }: Props) {
   const { id } = await Promise.resolve(params);
   const recipe = getRecipe(id);
 
+  // If the recipe ID does not match any known recipe, trigger the 404 not-found flow
   if (!recipe) {
     notFound();
   }
